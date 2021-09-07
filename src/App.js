@@ -5,6 +5,7 @@ import {Connection} from '@solana/web3.js';
 import {CreateBaseAccount, CreatePayAccount, CreateUserAccount, RecoverAccountFromMnemonic, GetAccountData } from './CreateAccount';
 import {CheckCID} from './SignMessage'
 const rpcUrl = "https://api.devnet.solana.com"
+
 function App() {
   const [baseAccount, setBaseAccount] = useState('');
   const [payAccount, setPayAccount] = useState('');
@@ -13,6 +14,8 @@ function App() {
   const [recoveredPubKey, setRecoveredPubKey] = useState('');
   const [CID, setCID] = useState('QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR');
   const [acctCheck, setAcctCheck] = useState('');
+  const [seedPhrase, setSeephrase] = useState('');
+  const [retrievedCID, setRetrievedCID] = useState('');
   let CONNECTION = new Connection(rpcUrl);
   //console.log('QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR'.length)
   const handleCreatingBaseAccount = async() => {
@@ -48,9 +51,9 @@ function App() {
     setUserAccount(user);
   }
   const handleRecoverAccount = async() => {
-    console.log(userAccount.mnemonic)
-    const reAcct = await RecoverAccountFromMnemonic(userAccount.mnemonic, CONNECTION);
-    console.log(reAcct);
+    //console.log(userAccount.mnemonic)
+    const reAcct = await RecoverAccountFromMnemonic(seedPhrase, CONNECTION);
+    //console.log(reAcct);
     setRecoveredPubKey(reAcct);
   }
   const handleChange = (event) => {
@@ -67,8 +70,11 @@ function App() {
   const handleGetDataFromAccount = async() => {
     const accountToGet = acctCheck;
     const accountInfo = await GetAccountData(accountToGet, CONNECTION);
-    console.log(accountInfo)
+    setRetrievedCID(accountInfo)
   }
+  const handleSeedPhraseChange = (event) => {
+    setSeephrase(event.target.value);
+  };
   return (
     <div className="App">
       <div style={{ marginTop: '2%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
@@ -87,6 +93,7 @@ function App() {
         <div>USER MNEMONIC: {userAccount.mnemonic}</div>
       </div>
       <div style={{ marginTop: '2%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
+        <input type="text" value={seedPhrase} onChange={handleSeedPhraseChange} />
         <Button variant="success" onClick={() => handleRecoverAccount()}>Recover USER Account</Button>{' '}
         <div>USER PUB KEY: {userAccount.pubKey}</div>
         <div>Recovered PUB KEY: {recoveredPubKey}</div>
@@ -103,6 +110,7 @@ function App() {
       <div style={{ marginTop: '2%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column'}}>
         <input type="text" value={acctCheck} onChange={handleAccountChange} />
         <Button variant="success" onClick={() => handleGetDataFromAccount()}>Get Data from Account</Button>{' '}
+        <div>Retrieved CID: {retrievedCID}</div>
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
 import * as bip39 from "bip39"
 import {Keypair, SystemProgram, Transaction, sendAndConfirmTransaction, PublicKey} from '@solana/web3.js';
-import * as borsh from 'borsh';
 
 const userRegistrationInfo = {
     phoneNumber: '416-123-4567',
