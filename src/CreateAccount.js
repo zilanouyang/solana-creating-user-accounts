@@ -30,23 +30,17 @@ export const CreateUserAccount = async(CID, connection, payer) => {
     const mnemonic = bip39.generateMnemonic();
 
     const seed = bip39.mnemonicToSeedSync(mnemonic).slice(0, 32)//.then(result => result);
-
-    console.log(CID);
     const userKeyPair = Keypair.fromSeed(seed);
     
     userCredentials.publicKey = userKeyPair.publicKey.toString();
     userCredentials.secretKey = userKeyPair.secretKey.toString();
-    console.log(userCredentials.secretKey);
     userCredentials.seed = seed;
     userCredentials.mnemonic = mnemonic;
     const dataSize = Buffer.from(CID).length;
-    console.log(dataSize)
-    console.log(Buffer.from(CID))
     const {feeCalculator} = await connection.getRecentBlockhash();
     let fees = 0;
     fees += await connection.getMinimumBalanceForRentExemption(dataSize);
     fees += feeCalculator.lamportsPerSignature * 100; 
-    console.log(fees);
     // Assign newly created user account to program
     const txParams = {
         fromPubkey: payer.publicKey,
@@ -60,13 +54,12 @@ export const CreateUserAccount = async(CID, connection, payer) => {
         //SystemProgram.assign({accountPubkey : userKeyPair.publicKey, programId: new PublicKey(PROGRAM_ID)}),
     );
     const tx = await sendAndConfirmTransaction(connection, transaction, [payer, userKeyPair]);
-    console.log(tx);
-    // let accountinfo = await connection.getAccountInfo(userKeyPair.publicKey);
-    // console.log(accountinfo);
     return userCredentials;
 }
 export const RecoverAccountFromMnemonic = async(mnemonic, connection) => {
+    //Get seed from imput mnemonic phrase
     const seed = bip39.mnemonicToSeedSync(mnemonic).slice(0, 32);
+    // Recover account from seed
     const recoveredAcct = Keypair.fromSeed(seed);
     const pubKey = recoveredAcct.publicKey.toString();
     let accountinfo = await connection.getAccountInfo(recoveredAcct.publicKey);
@@ -75,10 +68,11 @@ export const RecoverAccountFromMnemonic = async(mnemonic, connection) => {
 }
 // AccountInfo<T>: { data: T; executable: boolean; lamports: number; owner: PublicKey }
 export const GetAccountData = async(userKey, connection) => {
+    // Pass the user account pub key
     let pubKey = new PublicKey(userKey)
+    // Get the data inside of account 
     let accountInfo = await connection.getAccountInfo(pubKey);
-    //console.log(accountInfo)
+    // Get the value of the data 
     const data = accountInfo.data.toString();
-    console.log(data);
     return data
 }

@@ -15,33 +15,28 @@ export const InitiateAccountFromMnemonic = async(mnemonic) => {
 export const CheckCID = async(mnemonic, CID, connection, payerAccount) => {
     const userAccount = await InitiateAccountFromMnemonic(mnemonic);
     const transaction = new Transaction();
+    // Deployed program hash for writing data to user account
     const programId = 'HqqGdvPKWyumQY7dsrgeZavsR5i7BK6xHB9LUFKPhexy';
-    // // Format CID buffer
+    // Get public key of the program
     const programPubKey = new PublicKey(programId);
-    console.log(programPubKey)
-    const programKeyToString = programPubKey.toString();
-    console.log(programKeyToString)
+    // Convert CID to text buffer
     const textBuffer = Buffer.from(CID);
-    // // Sign CID data to transaction
-    // transaction.sign([payerAccount, userAccount])
-    console.log(userAccount)
+    // Call program function to write data to that specific account
     const instruction = new TransactionInstruction({
-        data: textBuffer,
-        keys: [{isSigner: true, isWritable: true, pubkey: payerAccount.publicKey }, {isSigner: true, isWritable: true, pubkey: userAccount.publicKey }],
+        data: textBuffer, // CID buffer
+        // Keys for payer account and user account
+        keys: [{isSigner: true, isWritable: true, pubkey: payerAccount.publicKey }, 
+            {isSigner: true, isWritable: true, pubkey: userAccount.publicKey }],
         programId: programPubKey,
     })
-    
+    // Add to transaction
     transaction.add(instruction);
-    console.log(payerAccount)
-    // //const tx = await connection.sendTransaction(userAccount, keys)
+    // Send and confirm transaction
     const tx = await sendAndConfirmTransaction(
         connection,
         transaction,
         [payerAccount, userAccount]
       );
     const userAccountInfo = await connection.getParsedAccountInfo(userAccount.publicKey, 'succuess');
-    console.log(userAccountInfo)
     return tx
-    // const signed_msg = connection.confirmTransaction(CID, 'success')
-    // return signed_msg
 }
