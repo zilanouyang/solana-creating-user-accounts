@@ -7,7 +7,7 @@ const userRegistrationInfo = {
     userName: 'Test_User',
     UserID: 'U123'
 }
-const PROGRAM_ID = 'HqqGdvPKWyumQY7dsrgeZavsR5i7BK6xHB9LUFKPhexy';
+const PROGRAM_ID = 'Ev6nT6UZwpjNJt6WsUC3HRMAQoMWShRFTL5kDWwY1T1Y';
 
 export const CreateBaseAccount = async() => {
     const baseAccount = Keypair.generate();
@@ -20,8 +20,12 @@ export const CreatePayAccount = async(connection) => {
     const signature = await connection.requestAirdrop(payerKey.publicKey, lamports)
     const tx = await connection.confirmTransaction(signature);
     let accountinfo = await connection.getAccountInfo(payerKey.publicKey);
+    let payerBal = await connection.getBalance(payerKey.publicKey);
+    let consumed = lamports - payerBal;
     console.log(accountinfo);
-    console.log(tx);
+    console.log('AIRDROP payer bal: ' + payerBal);
+    console.log('AIRDROP cost: ' + consumed);
+
     return payerKey;
 }
 
@@ -36,24 +40,33 @@ export const CreateUserAccount = async(CID, connection, payer) => {
     userCredentials.secretKey = userKeyPair.secretKey.toString();
     userCredentials.seed = seed;
     userCredentials.mnemonic = mnemonic;
-    const dataSize = Buffer.from(CID).length;
+    // const dataSize = Buffer.from(CID).length;
     const {feeCalculator} = await connection.getRecentBlockhash();
-    let fees = 0;
-    fees += await connection.getMinimumBalanceForRentExemption(dataSize);
-    fees += feeCalculator.lamportsPerSignature * 100; 
-    // Assign newly created user account to program
+    let payerBalBeforeTx = await connection.getBalance(payer.publicKey);
+    // let fees = 0;
+    //fees += await connection.getMinimumBalanceForRentExemption(dataSize);
+    // console.log(fees)
+    let fees = feeCalculator.lamportsPerSignature; 
+    // console.log(feeCalculator.lamportsPerSignature)
+    console.log('deposited: ' + fees);
+    // // Assign newly created user account to program
     const txParams = {
         fromPubkey: payer.publicKey,
         lamports: fees,
         newAccountPubkey: userKeyPair.publicKey,
         programId: new PublicKey(PROGRAM_ID),
-        space: dataSize
+        space: 0
     }
     const transaction = new Transaction().add(
         SystemProgram.createAccount(txParams)
         //SystemProgram.assign({accountPubkey : userKeyPair.publicKey, programId: new PublicKey(PROGRAM_ID)}),
     );
+
     const tx = await sendAndConfirmTransaction(connection, transaction, [payer, userKeyPair]);
+    let payerBal = await connection.getBalance(payer.publicKey);
+    let consumed = payerBalBeforeTx - payerBal;
+    console.log('CREATING USER payer bal: ' + payerBal);
+    console.log('CREATING USER cost: ' + consumed);
     return userCredentials;
 }
 export const RecoverAccountFromMnemonic = async(mnemonic, connection) => {
@@ -67,12 +80,12 @@ export const RecoverAccountFromMnemonic = async(mnemonic, connection) => {
     return pubKey
 }
 // AccountInfo<T>: { data: T; executable: boolean; lamports: number; owner: PublicKey }
-export const GetAccountData = async(userKey, connection) => {
+export const GetAccountData = async(txhash, connection) => {
     // Pass the user account pub key
-    let pubKey = new PublicKey(userKey)
+    //let pubKey = new PublicKey(userKey)
     // Get the data inside of account 
-    let accountInfo = await connection.getAccountInfo(pubKey);
+    let accountInfo = await connection.getConfirmedTransaction(txhash);
     // Get the value of the data 
-    const data = accountInfo.data.toString();
+    const data = accountInfo //.data.toString();
     return data
 }

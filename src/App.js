@@ -4,7 +4,7 @@ import './App.css';
 import {Connection} from '@solana/web3.js';
 import {CreateBaseAccount, CreatePayAccount, CreateUserAccount, RecoverAccountFromMnemonic, GetAccountData } from './CreateAccount';
 import {CheckCID} from './SignMessage'
-const rpcUrl = "https://api.devnet.solana.com"
+const rpcUrl = "https://api.testnet.solana.com"
 
 function App() {
   const [baseAccount, setBaseAccount] = useState('');
@@ -70,7 +70,7 @@ function App() {
   const handleGetDataFromAccount = async() => {
     const accountToGet = acctCheck;
     const accountInfo = await GetAccountData(accountToGet, CONNECTION);
-    setRetrievedCID(accountInfo)
+    console.log(accountInfo)
   }
   const handleSeedPhraseChange = (event) => {
     setSeephrase(event.target.value);
